@@ -13,39 +13,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.neo4j.repository.query;
 
-import org.springframework.data.mapping.PropertyPath;
-import org.springframework.data.neo4j.mapping.Neo4jMappingContext;
+import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.neo4j.mapping.Neo4jPersistentProperty;
 import org.springframework.data.neo4j.mapping.RelationshipInfo;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
- * Value object to build the {@code match} clause of a Cypher query.
+ * Value object to build the {@literal match} clause of a Cypher query.
  * 
  * @author Oliver Gierke
  */
 class MatchClause {
 
-    private final Iterable<Neo4jPersistentProperty> properties;
+    private final PersistentPropertyPath<Neo4jPersistentProperty> properties;
+    private final boolean hasRelationShip;
 
     /**
-     * Creates a new {@link MatchClause} using the given
-     * {@link org.springframework.data.neo4j.mapping.Neo4jMappingContext} and {@link PropertyPath}.
+     * Creates a new {@link MatchClause} using the given {@link PersistentPropertyPath}.
      * 
-     * @param context must not be {@literal null}.
-     * @param property must not be {@literal null}.
+     * @param properties must not be {@literal null}.
      */
-    public MatchClause(Neo4jMappingContext context, PropertyPath property) {
+    public MatchClause(PersistentPropertyPath<Neo4jPersistentProperty> properties) {
 
-        Assert.notNull(context);
-        Assert.notNull(property);
+        Assert.notNull(properties);
+        this.properties = properties;
 
-        this.properties = context.getPersistentPropertyPath(property);
+        for (Neo4jPersistentProperty property : properties) {
+            if (property.isRelationship()) {
+                this.hasRelationShip = true;
+                return;
+            }
+        }
+
+        this.hasRelationShip = false;
     }
+
+    /**
+     * Returns whether the match clause actually deals with a relationship.
+     * 
+     * @return
+     */
+    public boolean hasRelationship() {
+        return hasRelationShip;
+    }
+
 
     /*
      * (non-Javadoc)
@@ -59,29 +73,17 @@ class MatchClause {
         for (Neo4jPersistentProperty property : properties) {
 
             if (!property.isRelationship()) {
-                return intermediate;
+                return intermediate == null ? "" : intermediate;
             }
 
             RelationshipInfo info = property.getRelationshipInfo();
             Class<?> ownerType = property.getOwner().getType();
 
-            intermediate = intermediate == null ? asVariableReference(StringUtils.uncapitalize(ownerType
-                    .getSimpleName())) : intermediate;
-            intermediate = String.format(getPattern(info), intermediate, info.getType(),
-                    asVariableReference(property.getName()));
+            intermediate = intermediate == null ? StringUtils.uncapitalize(ownerType.getSimpleName()) : intermediate;
+            intermediate = String.format(getPattern(info), intermediate, info.getType(), property.getName());
         }
 
         return intermediate.toString();
-    }
-
-    /**
-     * Returns the given value as variable reference.
-     * 
-     * @param value
-     * @return
-     */
-    private static String asVariableReference(String value) {
-        return String.format("(%s)", value);
     }
 
     /**
