@@ -15,9 +15,12 @@
  */
 package org.springframework.data.neo4j.repository.query;
 
+import org.neo4j.helpers.collection.IteratorUtil;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.neo4j.mapping.Neo4jPersistentProperty;
 import org.springframework.util.Assert;
+
+import java.util.ArrayList;
 
 /**
  * Representation of a Cypher {@literal start} clause.
@@ -56,6 +59,7 @@ class StartClause {
      */
     @Override
     public String toString() {
-        return String.format(TEMPLATE, variable, path.toPath(","), index);
+        final Neo4jPersistentProperty leafProperty = path.getLeafProperty();
+        return String.format("%s=node:%s(%s={_%d})", variable, leafProperty.getIndexInfo().getIndexName(), leafProperty.getNeo4jPropertyName(), index);
     }
 }

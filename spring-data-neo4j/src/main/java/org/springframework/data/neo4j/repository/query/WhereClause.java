@@ -55,7 +55,7 @@ class WhereClause {
      * Creates a new {@link WhereClause} for the given {@link Neo4jPersistentProperty}, variable, type and parameter
      * index.
      * 
-     * @param twoLegs must not be {@literal null}.
+     * @param path must not be {@literal null}.
      * @param variable must not be {@literal null} or empty.
      * @param type must not be {@literal null}.
      * @param index
@@ -77,6 +77,6 @@ class WhereClause {
      */
     @Override
     public String toString() {
-        return String.format("%s.%s %s ?%d", variable, path.toDotPath(), SYMBOLS.get(type), index);
+        return String.format("%s.%s %s {_%d}", variable, path.getLeafProperty().getNeo4jPropertyName(), SYMBOLS.get(type), index);
     }
 }

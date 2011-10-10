@@ -18,14 +18,17 @@ package org.springframework.data.neo4j.repository.query;
 import static org.springframework.util.StringUtils.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.neo4j.mapping.Neo4jMappingContext;
+import org.springframework.data.neo4j.mapping.Neo4jPersistentEntityImpl;
 import org.springframework.data.neo4j.mapping.Neo4jPersistentProperty;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Value object to create Cypher queries.
@@ -34,18 +37,18 @@ import org.springframework.util.StringUtils;
  */
 public class CypherQueryBuilder {
 
-    private final static String DEFAULT_START_CLAUSE_TEMPLATE = "%s=(__types__,className,%s)";
+    private final static String DEFAULT_START_CLAUSE_TEMPLATE = "%s=node:__types__(className=\"%s\")";
 
     private final Neo4jMappingContext context;
 
-    private final String defaultStartClause;
-
-    private final VariableContext variableContext;
-    private final List<MatchClause> matchClauses;
-    private final List<StartClause> startClauses;
-    private final List<WhereClause> whereClauses;
-
+    private final VariableContext variableContext = new VariableContext();
+    private final List<MatchClause> matchClauses = new ArrayList<MatchClause>();
+    private final List<StartClause> startClauses = new ArrayList<StartClause>();
+    private final List<WhereClause> whereClauses = new ArrayList<WhereClause>();
+    private Sort sort;
+    private Pageable pageable;
     private int index = 0;
+    private final Neo4jPersistentEntityImpl<?> entity;
 
     /**
      * Creates a new {@link CypherQueryBuilder}.
@@ -54,18 +57,28 @@ public class CypherQueryBuilder {
      * @param type must not be {@literal null}.
      */
     public CypherQueryBuilder(Neo4jMappingContext context, Class<?> type) {
-
         Assert.notNull(context);
         Assert.notNull(type);
 
-        this.defaultStartClause = String.format(DEFAULT_START_CLAUSE_TEMPLATE,
-                StringUtils.uncapitalize(type.getSimpleName()), type.getName());
-
         this.context = context;
-        this.variableContext = new VariableContext();
-        this.matchClauses = new ArrayList<MatchClause>();
-        this.startClauses = new ArrayList<StartClause>();
-        this.whereClauses = new ArrayList<WhereClause>();
+        this.entity = context.getPersistentEntity(type);
+    }
+
+    public void setPageable(Pageable pageable) {
+        this.pageable = pageable;
+    }
+
+    public void addSort(Sort sort) {
+        if (this.sort == null) {
+            this.sort = sort;
+        }
+        else {
+            this.sort = this.sort.and(sort);
+        }
+    }
+
+    private String defaultStartClause() {
+        return String.format(DEFAULT_START_CLAUSE_TEMPLATE, this.variableContext.getVariableFor(entity), entity.getType().getName());
     }
 
     /**
@@ -80,11 +93,12 @@ public class CypherQueryBuilder {
         String variable = variableContext.getVariableFor(path);
 
         Neo4jPersistentProperty leafProperty = path.getLeafProperty();
-
+        if (!leafProperty.isRelationship()) {
         if (leafProperty.isIndexed()) {
             startClauses.add(new StartClause(path, variable, index++));
         } else {
             whereClauses.add(new WhereClause(path, variable, part.getType(), index++));
+        }
         }
 
         MatchClause matchClause = new MatchClause(path);
@@ -104,7 +118,7 @@ public class CypherQueryBuilder {
     public String toString() {
 
         String startClauses = collectionToDelimitedString(this.startClauses, ", ");
-        String matchClauses = collectionToDelimitedString(this.matchClauses, ", ");
+        String matchClauses = toString(this.matchClauses);
         String whereClauses = collectionToDelimitedString(this.whereClauses, ", ");
 
         StringBuilder builder = new StringBuilder("start ");
@@ -112,7 +126,7 @@ public class CypherQueryBuilder {
         if (hasText(startClauses)) {
             builder.append(startClauses);
         } else {
-            builder.append(defaultStartClause);
+            builder.append(defaultStartClause());
         }
 
         if (hasText(matchClauses)) {
@@ -122,7 +136,43 @@ public class CypherQueryBuilder {
         if (hasText(whereClauses)) {
             builder.append(" where ").append(whereClauses);
         }
+        
+        builder.append(" return ").append(variableContext.getVariableFor(entity));
+
+        addSorts(builder);
+
+        if (pageable != null) {
+           builder.append(String.format(" skip %d limit %d", pageable.getOffset(), pageable.getPageSize()));
+        }
 
         return builder.toString().trim();
+    }
+
+    private void addSorts(StringBuilder builder) {
+        final List<String> sorts = formatSorts(sort);
+        if (this.pageable !=null) {
+            sorts.addAll(formatSorts(this.pageable.getSort()));
+        }
+        if (!sorts.isEmpty()) {
+            builder.append(" order by ").append(collectionToCommaDelimitedString(sorts));
+        }
+    }
+
+    private List<String> formatSorts(Sort sort) {
+        List<String> result=new ArrayList<String>();
+        if (sort == null) return result;
+
+        for (Sort.Order order : sort) {
+            result.add(String.format("%s %s",order.getProperty(),order.getDirection()));
+        }
+        return result;
+    }
+
+    private String toString(List<MatchClause> matchClauses) {
+        List<String> result=new ArrayList<String>(matchClauses.size());
+        for (MatchClause matchClause : matchClauses) {
+            result.add(matchClause.toString(variableContext));
+        }
+        return collectionToDelimitedString(result, ", ");
     }
 }

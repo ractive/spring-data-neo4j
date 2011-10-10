@@ -15,11 +15,15 @@
  */
 package org.springframework.data.neo4j.repository.query;
 
+import static org.codehaus.groovy.runtime.InvokerHelper.asList;
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.neo4j.mapping.Neo4jMappingContext;
 import org.springframework.data.repository.query.parser.Part;
 
@@ -31,6 +35,7 @@ import org.springframework.data.repository.query.parser.Part;
 public class CypherQueryBuilderUnitTests {
 
     CypherQueryBuilder query;
+    private final String className = Person.class.getName();
 
     @Before
     public void setUp() {
@@ -44,7 +49,7 @@ public class CypherQueryBuilderUnitTests {
         Part part = new Part("name", Person.class);
         query.addRestriction(part);
 
-        assertThat(query.toString(), is("start person=(name,?0)"));
+        assertThat(query.toString(), is("start person=node:Person(name={_0}) return person"));
     }
 
     @Test
@@ -53,7 +58,7 @@ public class CypherQueryBuilderUnitTests {
         Part part = new Part("group.name", Person.class);
         query.addRestriction(part);
 
-        assertThat(query.toString(), is("start person_group=(group,name,?0) match person<-[:members]-group"));
+        assertThat(query.toString(), is("start person_group=node:Group(name={_0}) match person<-[:members]-person_group return person"));
     }
 
     @Test
@@ -63,7 +68,7 @@ public class CypherQueryBuilderUnitTests {
         query.addRestriction(new Part("group.name", Person.class));
 
         assertThat(query.toString(),
-                is("start person=(name,?0), person_group=(group,name,?1) match person<-[:members]-group"));
+                is("start person=node:Person(name={_0}), person_group=node:Group(name={_1}) match person<-[:members]-person_group return person"));
     }
 
     @Test
@@ -71,8 +76,14 @@ public class CypherQueryBuilderUnitTests {
 
         query.addRestriction(new Part("age", Person.class));
 
-        assertThat(query.toString(), is("start person=(__types__,className," + Person.class.getName()
-                + ") where person.age = ?0"));
+        final String className = Person.class.getName();
+        assertThat(query.toString(), is("start person=node:__types__(className=\"" + className + "\") where person.age = {_0} return person"));
+    }
+    @Test
+    public void createsSimpleTraversalClauseCorrectly() {
+        query.addRestriction(new Part("group", Person.class));
+
+        assertThat(query.toString(), is("start person=node:__types__(className=\"" + className + "\") match person<-[:members]-person_group return person"));
     }
 
 
@@ -85,5 +96,31 @@ public class CypherQueryBuilderUnitTests {
         query.addRestriction(new Part("groupMembersAge", Person.class));
 
         System.out.println(query.toString());
+        assertThat(query.toString(), is(
+        "start person=node:Person(name={_0}), person_group=node:Group(name={_1}) " +
+                "match person<-[:members]-person_group, person<-[:members]-person_group-[:members]->person_group_members " +
+                "where person.age > {_2}, person_group_members.age = {_3} " +
+                "return person"
+        ));
+    }
+
+    @Test
+    public void buildsQueryWithSort() {
+        query.addRestriction(new Part("name",Person.class));
+        query.addSort(new Sort("person.name"));
+        assertThat(query.toString(), is("start person=node:Person(name={_0}) return person order by person.name ASC"));
+    }
+    @Test
+    public void buildsQueryWithTwoSorts() {
+        query.addRestriction(new Part("name",Person.class));
+        query.addSort(new Sort(new Sort.Order("person.name"),new Sort.Order(Sort.Direction.DESC, "person.age")));
+        assertThat(query.toString(), is("start person=node:Person(name={_0}) return person order by person.name ASC,person.age DESC"));
+    }
+
+    @Test
+    public void buildsQueryWithPage() {
+        query.addRestriction(new Part("name",Person.class));
+        query.setPageable(new PageRequest(3,10,new Sort("person.name")));
+        assertThat(query.toString(), is("start person=node:Person(name={_0}) return person order by person.name ASC skip 30 limit 10"));
     }
 }

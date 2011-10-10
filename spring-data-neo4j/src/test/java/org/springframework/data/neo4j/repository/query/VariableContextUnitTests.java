@@ -44,11 +44,23 @@ public class VariableContextUnitTests {
     }
 
     @Test
-    public void testname() {
+    public void nameForSimplePropertyIsOwner() {
         assertThat(context.getVariableFor(getPath("age")), is("person"));
-        assertThat(context.getVariableFor(getPath("group.members")), is("person_group"));
+    }
+    @Test
+    public void nameForPathViaEntityIsOwnerAndEntity() {
+        assertThat(context.getVariableFor(getPath("group.members")), is("person_group_members"));
     }
 
+    @Test
+    public void nameForEntityIsLowercaseSimpleClassName() {
+        assertThat(context.getVariableFor(mappingContext.getPersistentEntity(Person.class)),is("person"));
+    }
+    @Test
+    public void nameForEntityPropertyIsOwnerAndEntity() {
+        final PersistentPropertyPath<Neo4jPersistentProperty> gropPath = getPath("group");
+        assertThat(context.getVariableFor(gropPath),is("person_group"));
+    }
 
     private PersistentPropertyPath<Neo4jPersistentProperty> getPath(String expression) {
 

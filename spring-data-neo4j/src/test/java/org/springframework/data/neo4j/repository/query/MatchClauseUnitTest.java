@@ -34,20 +34,21 @@ import org.springframework.data.neo4j.mapping.Neo4jMappingContext;
 public class MatchClauseUnitTest {
 
     Neo4jMappingContext context;
+    private VariableContext variableContext;
 
     @Before
     public void setUp() {
         context = new Neo4jMappingContext();
         context.setInitialEntitySet(Collections.singleton(Person.class));
         context.afterPropertiesSet();
+        variableContext = new VariableContext();
     }
 
     @Test
     public void buildsMatchExpressionForSimpleTraversalCorrectly() {
-
         PropertyPath path = PropertyPath.from("group", Person.class);
         MatchClause clause = new MatchClause(context.getPersistentPropertyPath(path));
-        assertThat(clause.toString(), is("person<-[:members]-group"));
+        assertThat(clause.toString(variableContext), is("person<-[:members]-person_group"));
     }
 
     @Test
@@ -55,7 +56,7 @@ public class MatchClauseUnitTest {
 
         PropertyPath path = PropertyPath.from("group.members.age", Person.class);
         MatchClause clause = new MatchClause(context.getPersistentPropertyPath(path));
-        assertThat(clause.toString(), is("person<-[:members]-group-[:members]->members"));
+        assertThat(clause.toString(variableContext), is("person<-[:members]-person_group-[:members]->person_group_members"));
     }
 
     @Test
@@ -63,6 +64,6 @@ public class MatchClauseUnitTest {
 
         PropertyPath path = PropertyPath.from("group.name", Person.class);
         MatchClause clause = new MatchClause(context.getPersistentPropertyPath(path));
-        assertThat(clause.toString(), is("person<-[:members]-group"));
+        assertThat(clause.toString(variableContext), is("person<-[:members]-person_group"));
     }
 }

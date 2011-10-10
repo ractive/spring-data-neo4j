@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.mapping.context.PersistentPropertyPath;
+import org.springframework.data.neo4j.mapping.Neo4jPersistentEntity;
 import org.springframework.data.neo4j.mapping.Neo4jPersistentProperty;
 import org.springframework.util.StringUtils;
 
@@ -44,10 +45,11 @@ public class VariableContext {
 
         Neo4jPersistentProperty baseProperty = path.getBaseProperty();
         List<String> parts = new ArrayList<String>();
-        parts.add(StringUtils.uncapitalize(baseProperty.getOwner().getType().getSimpleName()));
+        parts.add(getVariableFor(baseProperty.getOwner()));
 
+        final Neo4jPersistentProperty leaf = path.getLeafProperty();
         for (Neo4jPersistentProperty property : path) {
-            if (!path.getLeafProperty().equals(property)) {
+            if (leaf.isRelationship() || !leaf.equals(property)) {
                 parts.add(property.getName());
             }
         }
@@ -55,5 +57,9 @@ public class VariableContext {
         String variable = StringUtils.collectionToDelimitedString(parts, "_");
         variables.put(path, variable);
         return variable;
+    }
+
+    public String getVariableFor(Neo4jPersistentEntity<?> entity) {
+        return StringUtils.uncapitalize(entity.getType().getSimpleName());
     }
 }
