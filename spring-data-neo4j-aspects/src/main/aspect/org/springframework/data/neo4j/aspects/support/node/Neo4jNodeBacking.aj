@@ -159,12 +159,12 @@ public privileged aspect Neo4jNodeBacking { // extends AbstractTypeAnnotatingMix
         return this.relateTo(target, type, false);
     }
     public Relationship NodeBacked.relateTo(NodeBacked target, String type, boolean allowDuplicates) {
-        final RelationshipResult result = entityStateHandler().relateTo(this, target, type, allowDuplicates);
+        final RelationshipResult result = entityStateHandler().createRelationshipBetween(this, target, type, allowDuplicates);
         return result.relationship;
 	}
 
     public Relationship NodeBacked.getRelationshipTo(NodeBacked target, String type) {
-        return template().getRelationshipBetween(this, target, type);
+        return template().getRelationshipBetween(this,target,type);
     }
 
 	public Long NodeBacked.getNodeId() {
@@ -210,7 +210,7 @@ public privileged aspect Neo4jNodeBacking { // extends AbstractTypeAnnotatingMix
     }
 
     public void NodeBacked.removeRelationshipTo(NodeBacked target, String relationshipType) {
-        template().removeRelationshipBetween(this, target, relationshipType);
+        template().deleteRelationshipBetween(this, target, relationshipType);
     }
 
     public <R extends RelationshipBacked> R NodeBacked.getRelationshipTo( NodeBacked target, Class<R> relationshipClass, String type) {
