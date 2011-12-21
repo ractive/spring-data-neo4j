@@ -16,8 +16,6 @@
 
 package org.springframework.data.neo4j.fieldaccess;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.index.lucene.ValueContext;
@@ -59,8 +57,6 @@ public class IndexingPropertyFieldAccessorListenerFactory<S extends PropertyCont
 	 */
 	public static class IndexingPropertyFieldAccessorListener<T extends PropertyContainer> implements FieldAccessListener {
 
-	    private final static Log log = LogFactory.getLog( IndexingPropertyFieldAccessorListener.class );
-
 	    protected final String indexKey;
         private final Neo4jPersistentProperty property;
         private final Neo4jTemplate template;
@@ -73,7 +69,7 @@ public class IndexingPropertyFieldAccessorListenerFactory<S extends PropertyCont
 
 	    @Override
         public void valueChanged(Object entity, Object oldVal, Object newVal) {
-            @SuppressWarnings("unchecked") Index<T> index = template.getIndex(property, entity.getClass());
+            Index<T> index = template.getIndex(property, entity.getClass());
             if (newVal instanceof Number) newVal = ValueContext.numeric((Number) newVal);
 
             final T state = template.getPersistentState(entity);

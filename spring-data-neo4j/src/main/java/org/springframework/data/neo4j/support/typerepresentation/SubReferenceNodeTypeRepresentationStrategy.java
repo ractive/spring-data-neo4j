@@ -16,19 +16,24 @@
 
 package org.springframework.data.neo4j.support.typerepresentation;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.neo4j.graphdb.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.helpers.collection.ClosableIterable;
 import org.neo4j.helpers.collection.IterableWrapper;
 import org.neo4j.kernel.Traversal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.neo4j.core.GraphDatabase;
 import org.springframework.data.neo4j.core.NodeTypeRepresentationStrategy;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * A {@link org.springframework.data.neo4j.core.TypeRepresentationStrategy} that uses a hierarchy of reference nodes to represent the java type of the entity in the
@@ -40,7 +45,7 @@ import java.util.List;
  * @since 13.09.2010
  */
 public class SubReferenceNodeTypeRepresentationStrategy implements NodeTypeRepresentationStrategy {
-    private final static Log log = LogFactory.getLog(SubReferenceNodeTypeRepresentationStrategy.class);
+    private final static Logger LOG = LoggerFactory.getLogger(SubReferenceNodeTypeRepresentationStrategy.class);
 
     public final static RelationshipType INSTANCE_OF_RELATIONSHIP_TYPE = DynamicRelationshipType.withName("INSTANCE_OF");
     public final static RelationshipType SUBCLASS_OF_RELATIONSHIP_TYPE = DynamicRelationshipType.withName("SUBCLASS_OF");
@@ -91,7 +96,7 @@ public class SubReferenceNodeTypeRepresentationStrategy implements NodeTypeRepre
 	    final Node subReference = obtainSubreferenceNode(type);
         state.createRelationshipTo(subReference, INSTANCE_OF_RELATIONSHIP_TYPE);
 	    subReference.setProperty(SUBREF_CLASS_KEY, type.getName());
-	    if (log.isDebugEnabled()) log.debug("Created link to subref node: " + subReference + " with type: " + type.getName());
+	    if (LOG.isDebugEnabled()) LOG.debug("Created link to subref node: {} with type: {}", subReference, type.getName());
 
         incrementAndGetCounter(subReference, SUBREFERENCE_NODE_COUNTER_KEY);
 
@@ -107,7 +112,7 @@ public class SubReferenceNodeTypeRepresentationStrategy implements NodeTypeRepre
 		    }
 		    superClassSubref.setProperty(SUBREF_CLASS_KEY, superClass.getName());
 		    Integer count = incrementAndGetCounter(superClassSubref, SUBREFERENCE_NODE_COUNTER_KEY);
-		    if (log.isDebugEnabled()) log.debug("count on ref " + superClassSubref + " for class " + superClass.getSimpleName() + " = " + count);
+		    if (LOG.isDebugEnabled()) LOG.debug("count on ref {} for class {} = {}", new Object[] {superClassSubref,  superClass.getSimpleName(), count});
 		    updateSuperClassSubrefs(superClass, superClassSubref);
 	    }
 	}
@@ -120,7 +125,6 @@ public class SubReferenceNodeTypeRepresentationStrategy implements NodeTypeRepre
     }
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> Class<T> getJavaType(Node node) {
         if (node == null) throw new IllegalArgumentException("Node is null");
         Relationship instanceOfRelationship = node.getSingleRelationship(INSTANCE_OF_RELATIONSHIP_TYPE, Direction.OUTGOING);
@@ -129,7 +133,7 @@ public class SubReferenceNodeTypeRepresentationStrategy implements NodeTypeRepre
         Node subrefNode = instanceOfRelationship.getEndNode();
         final String typeName = (String) subrefNode.getProperty(SUBREF_CLASS_KEY);
         Class<T> clazz = resolveType(node, typeName);
-        if (log.isDebugEnabled()) log.debug("Found class " + clazz.getSimpleName() + " for node: " + node);
+        if (LOG.isDebugEnabled()) LOG.debug("Found class {} for node: {}", clazz.getSimpleName(), node);
         return clazz;
     }
 
@@ -149,20 +153,20 @@ public class SubReferenceNodeTypeRepresentationStrategy implements NodeTypeRepre
         final Node subReference = obtainSubreferenceNode(clazz);
         Relationship instanceOf = state.getSingleRelationship(INSTANCE_OF_RELATIONSHIP_TYPE, Direction.OUTGOING);
         instanceOf.delete();
-        if (log.isDebugEnabled())
-            log.debug("Removed link to subref node: " + subReference + " with type: " + clazz.getName());
+        if (LOG.isDebugEnabled())
+            LOG.debug("Removed link to subref node:{} with type: {}", subReference, clazz.getName());
         TraversalDescription traversal = Traversal.description().depthFirst().relationships(SUBCLASS_OF_RELATIONSHIP_TYPE, Direction.OUTGOING);
         for (Node node : traversal.traverse(subReference).nodes()) {
             Integer count = (Integer) node.getProperty(SUBREFERENCE_NODE_COUNTER_KEY);
             Integer newCount = decrementAndGetCounter(node, SUBREFERENCE_NODE_COUNTER_KEY, 0);
-            if (log.isDebugEnabled()) log.debug("count on ref " + node + " was " + count + " new " + newCount);
+            if (LOG.isDebugEnabled()) LOG.debug("count on ref {} was {} new {}", new Object[] { node, count, newCount});
         }
     }
 
     @Override
     public <T> ClosableIterable<Node> findAll(final Class<T> clazz) {
         final Node subrefNode = findSubreferenceNode(clazz);
-		if (log.isDebugEnabled()) log.debug("Subref: " + subrefNode);
+		if (LOG.isDebugEnabled()) LOG.debug("Subref: {}", subrefNode);
 		Iterable<Iterable<Node>> relIterables = findEntityIterables(subrefNode);
 		return new ClosableCombiningIterable<Node>(relIterables);
     }

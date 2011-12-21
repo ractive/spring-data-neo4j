@@ -16,22 +16,22 @@
 
 package org.springframework.data.neo4j.fieldaccess;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.neo4j.graphdb.Transaction;
-import org.springframework.data.neo4j.core.EntityState;
-import org.springframework.data.neo4j.mapping.MappingPolicy;
-import org.springframework.data.neo4j.mapping.Neo4jPersistentEntity;
-import org.springframework.data.neo4j.mapping.Neo4jPersistentProperty;
-import org.springframework.data.neo4j.support.Neo4jTemplate;
-import org.springframework.util.ObjectUtils;
+import static org.springframework.data.neo4j.support.DoReturn.unwrap;
 
 import java.lang.reflect.Field;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.springframework.data.neo4j.support.DoReturn.unwrap;
+import org.neo4j.graphdb.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.core.EntityState;
+import org.springframework.data.neo4j.mapping.MappingPolicy;
+import org.springframework.data.neo4j.mapping.Neo4jPersistentEntity;
+import org.springframework.data.neo4j.mapping.Neo4jPersistentProperty;
+import org.springframework.data.neo4j.support.Neo4jTemplate;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Michael Hunger
@@ -40,7 +40,7 @@ import static org.springframework.data.neo4j.support.DoReturn.unwrap;
 public class DetachedEntityState<STATE> implements EntityState<STATE> {
     private final Map<Neo4jPersistentProperty, ExistingValue> dirty = new HashMap<Neo4jPersistentProperty, ExistingValue>();
     protected final EntityState<STATE> delegate;
-    private final static Log log = LogFactory.getLog(DetachedEntityState.class);
+    private final static Logger LOG = LoggerFactory.getLogger(DetachedEntityState.class);
     private Neo4jTemplate template;
     private Neo4jPersistentEntity<?> persistentEntity;
 
@@ -80,7 +80,7 @@ public class DetachedEntityState<STATE> implements EntityState<STATE> {
         mappingPolicy = mappingPolicy == null ? property.getMappingPolicy() : mappingPolicy;
         if (isDetached()) {
             if (template.getPersistentState(getEntity())==null || isDirty(property)) {
-                if (log.isDebugEnabled()) log.debug("Outside of transaction, GET value from field " + property);
+                if (LOG.isDebugEnabled()) LOG.debug("Outside of transaction, GET value from field {}", property);
                 Object entityValue = getValueFromEntity(property, MappingPolicy.MAP_FIELD_DIRECT_POLICY);
                 if (entityValue != null) {
                 	return entityValue;
@@ -174,7 +174,7 @@ public class DetachedEntityState<STATE> implements EntityState<STATE> {
         if (template.transactionIsRunning()) {
             delegate.createAndAssignState();
         } else {
-            log.warn("New Nodebacked created outside of transaction " + delegate.getEntity().getClass());
+            LOG.warn("New Nodebacked created outside of transaction {}", delegate.getEntity().getClass());
         }
     }
 
@@ -195,7 +195,7 @@ public class DetachedEntityState<STATE> implements EntityState<STATE> {
                     final Neo4jPersistentProperty property = entry.getKey();
                     Object valueFromEntity = getValueFromEntity(property, MappingPolicy.MAP_FIELD_DIRECT_POLICY);
                     cascadePersist(valueFromEntity);
-                    if (log.isDebugEnabled()) log.debug("Flushing dirty Entity new node " + entity + " field " + property+ " with value "+ valueFromEntity);
+                    if (LOG.isDebugEnabled()) LOG.debug("Flushing dirty Entity new node {} field {} with value {}", new Object[] {entity, property, valueFromEntity});
                     final MappingPolicy mappingPolicy = property.getMappingPolicy();
                     checkConcurrentModification(entity, entry, property, mappingPolicy);
                     delegate.setValue(property, valueFromEntity, mappingPolicy);

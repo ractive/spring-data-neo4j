@@ -16,8 +16,6 @@
 
 package org.springframework.data.neo4j.fieldaccess;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.neo4j.graphdb.PropertyContainer;
 
 import org.springframework.data.neo4j.mapping.Neo4jPersistentEntity;
@@ -64,7 +62,6 @@ class ValidatingNodePropertyFieldAccessorListenerFactory implements FieldAccesso
 	 */
 	public static class ValidatingNodePropertyFieldAccessorListener<T extends PropertyContainer> implements FieldAccessListener {
 
-	    private final static Log log = LogFactory.getLog( ValidatingNodePropertyFieldAccessorListener.class );
         private String propertyName;
         private Validator validator;
         private Neo4jPersistentEntity<?> entityType;

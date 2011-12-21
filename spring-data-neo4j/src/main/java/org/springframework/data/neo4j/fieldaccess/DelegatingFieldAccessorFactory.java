@@ -16,8 +16,14 @@
 
 package org.springframework.data.neo4j.fieldaccess;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.PropertyHandler;
@@ -26,12 +32,10 @@ import org.springframework.data.neo4j.mapping.Neo4jPersistentProperty;
 import org.springframework.data.neo4j.support.Neo4jTemplate;
 import org.springframework.data.util.TypeInformation;
 
-import java.util.*;
-
 
 public abstract class DelegatingFieldAccessorFactory implements FieldAccessorFactory {
 
-	private final static Log log = LogFactory.getLog(DelegatingFieldAccessorFactory.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DelegatingFieldAccessorFactory.class);
 
 	protected final Neo4jTemplate template;
 
@@ -67,11 +71,11 @@ public abstract class DelegatingFieldAccessorFactory implements FieldAccessorFac
         if (property.isSyntheticField()) return null;
         for (final FieldAccessorFactory fieldAccessorFactory : fieldAccessorFactories) {
             if (fieldAccessorFactory.accept(property)) {
-                if (log.isInfoEnabled()) log.info("Factory " + fieldAccessorFactory + " used for field: " + property);
+                if (LOG.isInfoEnabled()) LOG.info("Factory {} used for field: {}", fieldAccessorFactory, property);
                 return fieldAccessorFactory;
             }
         }
-        if (log.isWarnEnabled()) log.warn("No FieldAccessor configured for field: " + property);
+        if (LOG.isWarnEnabled()) LOG.warn("No FieldAccessor configured for field: {}", property);
         return null;
     }
 

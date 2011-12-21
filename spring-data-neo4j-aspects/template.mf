@@ -3,6 +3,7 @@ Bundle-Name: Spring Data Neo4j Aspects
 Bundle-Vendor: SpringSource
 Bundle-ManifestVersion: 2
 Import-Template: 
+ org.slf4j.*;version="[1.5,2)",
  org.springframework.beans.*;version="[3.0.0, 4.0.0)",
  org.springframework.context.*;version="[3.0.0, 4.0.0)",
  org.springframework.core.*;version="[3.0.0, 4.0.0)",

@@ -16,8 +16,6 @@
 
 package org.springframework.data.neo4j.fieldaccess;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.data.neo4j.core.EntityState;
 import org.springframework.data.neo4j.mapping.MappingPolicy;
 import org.springframework.data.neo4j.mapping.Neo4jPersistentEntity;
@@ -38,7 +36,6 @@ public abstract class DefaultEntityState<STATE> implements EntityState<STATE> {
     private final Map<Neo4jPersistentProperty, FieldAccessor> fieldAccessors = new HashMap<Neo4jPersistentProperty, FieldAccessor>();
     private final Map<Neo4jPersistentProperty,List<FieldAccessListener>> fieldAccessorListeners = new HashMap<Neo4jPersistentProperty, List<FieldAccessListener>>();
     private STATE state;
-    protected final static Log log= LogFactory.getLog(DefaultEntityState.class);
     private final FieldAccessorFactoryProviders<Object> fieldAccessorFactoryProviders;
     protected final Neo4jPersistentEntity<?> persistentEntity;
 

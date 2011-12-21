@@ -15,19 +15,20 @@
  */
 package org.springframework.data.neo4j.support.mapping;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.neo4j.mapping.EntityInstantiator;
 import org.springframework.data.neo4j.mapping.MappingPolicy;
 import org.springframework.data.persistence.StateBackedCreator;
 import org.springframework.data.persistence.StateProvider;
 import org.springframework.util.ClassUtils;
-import sun.reflect.ReflectionFactory;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
+import sun.reflect.ReflectionFactory;
 
 /**
  * Try for a constructor taking state: failing that, try a no-arg constructor and then setUnderlyingNode().
@@ -36,7 +37,7 @@ import java.util.Map;
  */
 public abstract class AbstractConstructorEntityInstantiator<STATE> implements EntityInstantiator<STATE> {
 
-	private final Log log = LogFactory.getLog(getClass());
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final Map<Class<?>, StateBackedCreator<?, STATE>> cache = new HashMap<Class<?>, StateBackedCreator<?, STATE>>();
 
 	@SuppressWarnings("unchecked")
@@ -99,7 +100,7 @@ public abstract class AbstractConstructorEntityInstantiator<STATE> implements En
 		if (constructor == null)
 			return null;
 
-		log.info("Using " + type + " no-arg constructor");
+		log.info("Using {} no-arg constructor", type);
 
 		return new StateBackedCreator<T, STATE>() {
 			public T create(STATE state, Class<T> c) throws Exception {
@@ -143,7 +144,7 @@ public abstract class AbstractConstructorEntityInstantiator<STATE> implements En
 		if (constructor == null)
 			return null;
 
-		log.info("Using " + type + " constructor taking " + stateInterface);
+		log.info("Using {} constructor taking {}",type, stateInterface);
 		return new StateBackedCreator<T, STATE>() {
 			public T create(STATE n, Class<T> c) throws Exception {
 				return constructor.newInstance(n);

@@ -170,7 +170,6 @@ public class FinderTest extends EntityTestBase {
     @Test
 	@Transactional
 	public void testFindAllOnGroup() {
-	    log.debug("FindAllOnGroup start");
         Group g = persist(new Group());
         g.setName("test");
         Group g2 = persist(new Group());
@@ -181,7 +180,6 @@ public class FinderTest extends EntityTestBase {
     @Test
 	@Transactional
 	public void testFindPaged() {
-	    log.debug("FindAllOnGroup start");
         Person p1=Person.persistedPerson("person1",11);
         Person p2=Person.persistedPerson("person2", 12);
         Person p3=Person.persistedPerson("person3", 13);

@@ -16,8 +16,6 @@
 
 package org.springframework.data.neo4j.repository;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -63,8 +61,6 @@ import static org.neo4j.helpers.collection.IteratorUtil.asCollection;
 @ContextConfiguration
 @TestExecutionListeners({CleanContextCacheTestExecutionListener.class, DependencyInjectionTestExecutionListener.class, TransactionalTestExecutionListener.class})
 public class GraphRepositoryTest {
-
-    protected final Log log = LogFactory.getLog(getClass());
 
     @Autowired
     private Neo4jTemplate neo4jTemplate;

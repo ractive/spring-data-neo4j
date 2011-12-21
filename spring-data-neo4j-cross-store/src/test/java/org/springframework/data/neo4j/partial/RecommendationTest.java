@@ -16,8 +16,6 @@
 
 package org.springframework.data.neo4j.partial;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,8 +41,6 @@ import javax.sql.DataSource;
 @ContextConfiguration(locations = {"classpath:org/springframework/data/neo4j/partial/Neo4jGraphRecommendationTest-context.xml"})
 @TestExecutionListeners({CleanContextCacheTestExecutionListener.class, DependencyInjectionTestExecutionListener.class, TransactionalTestExecutionListener.class})
 public class RecommendationTest {
-
-    protected final Log log = LogFactory.getLog(getClass());
 
     @Autowired
     PlatformTransactionManager transactionManager;

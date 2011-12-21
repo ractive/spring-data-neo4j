@@ -21,6 +21,8 @@ import org.neo4j.graphdb.NotInTransactionException;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.neo4j.fieldaccess.DefaultEntityState;
 import org.springframework.data.neo4j.fieldaccess.DelegatingFieldAccessorFactory;
@@ -30,6 +32,7 @@ import org.springframework.data.neo4j.mapping.Neo4jPersistentProperty;
 import org.springframework.data.neo4j.mapping.RelationshipProperties;
 import org.springframework.data.neo4j.support.Neo4jTemplate;
 import org.springframework.data.neo4j.support.ParameterCheck;
+import org.springframework.data.neo4j.support.node.NodeEntityState;
 
 
 /**
@@ -37,7 +40,7 @@ import org.springframework.data.neo4j.support.ParameterCheck;
  * @since 21.09.2010
  */
 public class RelationshipEntityState extends DefaultEntityState<Relationship> {
-
+    private static final Logger LOG = LoggerFactory.getLogger(RelationshipEntityState.class);
     private final Neo4jTemplate template;
     private MappingPolicy mappingPolicy;
 
@@ -56,13 +59,13 @@ public class RelationshipEntityState extends DefaultEntityState<Relationship> {
             if (id instanceof Number) {
                 final Relationship relationship = template.getRelationship(((Number) id).longValue());
                 setPersistentState(relationship);
-                if (log.isInfoEnabled())
-                    log.info("Entity reattached " + entity.getClass() + "; used Relationship [" + state + "];");
+                if (LOG.isInfoEnabled())
+                    LOG.info("Entity reattached {}; used Relationship [{}];", entity.getClass(), state);
                 return;
             }
             final Relationship relationship = createRelationshipFromEntity();
             setPersistentState(relationship);
-            if (log.isInfoEnabled()) log.info("User-defined constructor called on class " + entity.getClass() + "; created Relationship [" + getPersistentState() + "]; Updating metamodel");
+            if (LOG.isInfoEnabled()) LOG.info("User-defined constructor called on class {}; created Relationship [{}]; Updating metamodel", entity.getClass(), getPersistentState());
             template.postEntityCreation(relationship, type);
         } catch (NotInTransactionException e) {
             throw new InvalidDataAccessResourceUsageException("Not in a Neo4j transaction.", e);

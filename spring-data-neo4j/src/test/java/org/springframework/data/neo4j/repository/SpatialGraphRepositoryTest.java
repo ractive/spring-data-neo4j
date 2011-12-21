@@ -16,8 +16,6 @@
 
 package org.springframework.data.neo4j.repository;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,8 +45,6 @@ import static org.neo4j.helpers.collection.IteratorUtil.asCollection;
 @ContextConfiguration(locations = {"classpath:org/springframework/data/neo4j/repository/GraphRepositoryTest-context.xml"})
 @Transactional
 public class SpatialGraphRepositoryTest {
-
-    protected final Log log = LogFactory.getLog(getClass());
 
     @Autowired
     private Neo4jTemplate neo4jTemplate;

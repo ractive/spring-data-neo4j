@@ -16,16 +16,21 @@
 
 package org.springframework.data.neo4j.transaction;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.transaction.*;
+import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Arrays.asList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.HeuristicCompletionException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.UnexpectedRollbackException;
 
 /**
  * @author mh
@@ -33,7 +38,7 @@ import static java.util.Arrays.asList;
  */
 public class ChainedTransactionManager implements PlatformTransactionManager {
 
-    private final static Log logger = LogFactory.getLog(ChainedTransactionManager.class);
+    private final static Logger LOG = LoggerFactory.getLogger(ChainedTransactionManager.class);
 
     private final List<PlatformTransactionManager> transactionManagers;
     private final SynchronizationManager synchronizationManager;
@@ -87,7 +92,7 @@ public class ChainedTransactionManager implements PlatformTransactionManager {
                 try {
                     multiTransactionStatus.rollback(transactionManager);
                 } catch (Exception ex) {
-                    logger.warn("Rollback exception (after commit) (" + transactionManager + ") " + ex.getMessage(), ex);
+                    LOG.warn("Rollback exception (after commit) (" + transactionManager + ") " + ex.getMessage(), ex);
                 }
             }
         }
@@ -121,7 +126,7 @@ public class ChainedTransactionManager implements PlatformTransactionManager {
                     rollbackException = ex;
                     rollbackExceptionTransactionManager = transactionManager;
                 } else {
-                    logger.warn("Rollback exception (" + transactionManager + ") " + ex.getMessage(), ex);
+                    LOG.warn("Rollback exception (" + transactionManager + ") " + ex.getMessage(), ex);
                 }
             }
         }

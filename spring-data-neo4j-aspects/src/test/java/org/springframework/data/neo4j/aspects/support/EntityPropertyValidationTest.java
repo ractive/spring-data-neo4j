@@ -16,8 +16,6 @@
 
 package org.springframework.data.neo4j.aspects.support;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +34,6 @@ import static org.springframework.data.neo4j.aspects.Person.persistedPerson;
 @ContextConfiguration(locations = {"classpath:org/springframework/data/neo4j/aspects/support/Neo4jGraphPersistenceTest-context.xml"})
 
 public class EntityPropertyValidationTest extends EntityTestBase {
-
-	protected final Log log = LogFactory.getLog(getClass());
 
 	@Autowired
 	private Neo4jTemplate template;

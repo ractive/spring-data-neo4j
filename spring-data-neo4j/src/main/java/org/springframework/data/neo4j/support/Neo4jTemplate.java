@@ -23,8 +23,6 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.validation.Validator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -83,8 +81,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 TODO This is a  merge of GraphDatabaseContext and the previous Neo4jTemplate, so it still contains inconsistencies, if you spot them, please mark them with a TODO
  */
 public class Neo4jTemplate implements Neo4jOperations, EntityPersister {
-    private static final Log log = LogFactory.getLog(Neo4jTemplate.class);
-
     private MappingInfrastructure infrastructure = new MappingInfrastructure();
 
     /**

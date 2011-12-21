@@ -15,8 +15,6 @@
  */
 package org.springframework.data.neo4j.aspects.support;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -40,8 +38,6 @@ import java.util.Set;
  * @since 15.10.11
  */
 public class EntityTestBase {
-    protected final Log log = LogFactory.getLog(getClass());
-
     @Autowired protected Neo4jTemplate neo4jTemplate;
     @Autowired protected ConversionService conversionService;
 
@@ -77,7 +73,6 @@ public class EntityTestBase {
         return neo4jTemplate.getPersistentState(entity);
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T persist(T entity) {
         return (T) neo4jTemplate.save(entity);
     }

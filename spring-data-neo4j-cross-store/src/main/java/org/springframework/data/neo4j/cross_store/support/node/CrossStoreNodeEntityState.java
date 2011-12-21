@@ -16,31 +16,47 @@
 
 package org.springframework.data.neo4j.cross_store.support.node;
 
+import java.util.Arrays;
+import java.util.Collection;
+
+import javax.persistence.PersistenceUnitUtil;
+
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.NotInTransactionException;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.neo4j.annotation.GraphProperty;
 import org.springframework.data.neo4j.annotation.RelatedTo;
 import org.springframework.data.neo4j.aspects.core.NodeBacked;
 import org.springframework.data.neo4j.cross_store.fieldaccess.JpaIdFieldAccessListenerFactory;
-import org.springframework.data.neo4j.fieldaccess.*;
+import org.springframework.data.neo4j.fieldaccess.ConvertingNodePropertyFieldAccessorFactory;
+import org.springframework.data.neo4j.fieldaccess.DefaultEntityState;
+import org.springframework.data.neo4j.fieldaccess.DelegatingFieldAccessorFactory;
+import org.springframework.data.neo4j.fieldaccess.FieldAccessor;
+import org.springframework.data.neo4j.fieldaccess.FieldAccessorFactory;
+import org.springframework.data.neo4j.fieldaccess.FieldAccessorListenerFactory;
+import org.springframework.data.neo4j.fieldaccess.IndexingPropertyFieldAccessorListenerFactory;
+import org.springframework.data.neo4j.fieldaccess.OneToNRelationshipEntityFieldAccessorFactory;
+import org.springframework.data.neo4j.fieldaccess.OneToNRelationshipFieldAccessorFactory;
+import org.springframework.data.neo4j.fieldaccess.PropertyFieldAccessorFactory;
+import org.springframework.data.neo4j.fieldaccess.QueryFieldAccessorFactory;
+import org.springframework.data.neo4j.fieldaccess.ReadOnlyOneToNRelationshipFieldAccessorFactory;
+import org.springframework.data.neo4j.fieldaccess.SingleRelationshipFieldAccessorFactory;
+import org.springframework.data.neo4j.fieldaccess.TraversalFieldAccessorFactory;
 import org.springframework.data.neo4j.mapping.Neo4jPersistentEntity;
 import org.springframework.data.neo4j.mapping.Neo4jPersistentProperty;
 import org.springframework.data.neo4j.support.Neo4jTemplate;
 import org.springframework.data.neo4j.support.index.IndexType;
-
-import javax.persistence.PersistenceUnitUtil;
-import java.util.Arrays;
-import java.util.Collection;
 
 /**
  * @author Michael Hunger
  * @since 21.09.2010
  */
 public class CrossStoreNodeEntityState<ENTITY extends NodeBacked> extends DefaultEntityState<Node> {
-
+    private static final Logger LOG = LoggerFactory.getLogger(CrossStoreNodeEntityState.class);
     public static final String FOREIGN_ID = "foreignId";
     public static final String FOREIGN_ID_INDEX = "foreign_id";
 
@@ -68,7 +84,7 @@ public class CrossStoreNodeEntityState<ENTITY extends NodeBacked> extends Defaul
                 node = template.createNode();
                 persistForeignId(node, id);
                 setPersistentState(node);
-                log.info("User-defined constructor called on class " + entity.getClass() + "; created Node [" + entity.getPersistentState() + "]; Updating metamodel");
+                LOG.info("User-defined constructor called on class {}; created Node [{}]; Updating metamodel", entity.getClass(), entity.getPersistentState());
                 template.postEntityCreation(node, type);
             } else {
                 setPersistentState(node);

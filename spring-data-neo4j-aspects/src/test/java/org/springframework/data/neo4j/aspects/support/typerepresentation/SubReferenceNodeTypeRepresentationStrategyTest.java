@@ -162,7 +162,6 @@ public class SubReferenceNodeTypeRepresentationStrategyTest extends EntityTestBa
     @Test
 	@Transactional
 	public void testInstantiateConcreteClass() {
-		log.debug("testInstantiateConcreteClass");
         Person p = persistedPerson("Michael", 35);
         Car c = persist(new Volvo());
 		p.setCar(c);
@@ -172,7 +171,6 @@ public class SubReferenceNodeTypeRepresentationStrategyTest extends EntityTestBa
 	@Test
 	@Transactional
 	public void testInstantiateConcreteClassWithFinder() {
-		log.debug("testInstantiateConcreteClassWithFinder");
         persist(new Volvo());
         GraphRepository<Car> finder = neo4jTemplate.repositoryFor(Car.class);
 		assertEquals("Wrong concrete class.", Volvo.class, finder.findAll().iterator().next().getClass());
@@ -181,11 +179,8 @@ public class SubReferenceNodeTypeRepresentationStrategyTest extends EntityTestBa
 	@Test
 	@Transactional
 	public void testCountSubclasses() {
-		log.warn("testCountSubclasses");
         persist(new Volvo());
-		log.warn("Created volvo");
         persist(new Toyota());
-		log.warn("Created volvo");
         assertEquals("Wrong count for Volvo.", 1L, neo4jTemplate.repositoryFor(Volvo.class).count());
         assertEquals("Wrong count for Toyota.", 1L, neo4jTemplate.repositoryFor(Toyota.class).count());
         assertEquals("Wrong count for Car.", 2L, neo4jTemplate.repositoryFor(Car.class).count());

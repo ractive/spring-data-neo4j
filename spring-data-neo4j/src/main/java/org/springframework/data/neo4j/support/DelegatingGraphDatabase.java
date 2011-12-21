@@ -16,14 +16,24 @@
 
 package org.springframework.data.neo4j.support;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.neo4j.graphdb.*;
+import java.util.Map;
+
+import javax.transaction.Status;
+import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
+
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 import org.neo4j.kernel.AbstractGraphDatabase;
 import org.neo4j.kernel.Traversal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.neo4j.annotation.QueryType;
 import org.springframework.data.neo4j.conversion.DefaultConverter;
@@ -39,11 +49,6 @@ import org.springframework.data.neo4j.support.query.QueryEngine;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
-import java.util.Map;
-
 /**
  * @author mh
  * @since 29.03.11
@@ -53,7 +58,7 @@ public class DelegatingGraphDatabase implements GraphDatabase {
     protected GraphDatabaseService delegate;
     private ConversionService conversionService;
     private ResultConverter resultConverter;
-    private static final Log log = LogFactory.getLog(DelegatingGraphDatabase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DelegatingGraphDatabase.class);
 
     public DelegatingGraphDatabase(final GraphDatabaseService delegate) {
         this.delegate = delegate;
@@ -203,7 +208,7 @@ public class DelegatingGraphDatabase implements GraphDatabase {
             final TransactionManager txManager = ((AbstractGraphDatabase) delegate).getConfig().getTxModule().getTxManager();
             return txManager.getStatus() != Status.STATUS_NO_TRANSACTION;
         } catch (SystemException e) {
-            log.error("Error accessing TransactionManager", e);
+            LOG.error("Error accessing TransactionManager", e);
             return false;
         }
     }

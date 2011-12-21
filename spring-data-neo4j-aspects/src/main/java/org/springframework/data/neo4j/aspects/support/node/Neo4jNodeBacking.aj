@@ -17,40 +17,41 @@
 package org.springframework.data.neo4j.aspects.support.node;
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.reflect.FieldSignature;
-import org.neo4j.graphdb.DynamicRelationshipType;
-import org.neo4j.graphdb.Path;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.traversal.TraversalDescription;
-import org.neo4j.graphdb.traversal.Traverser;
-
-import org.springframework.data.neo4j.annotation.*;
-
-import org.springframework.data.neo4j.aspects.core.NodeBacked;
-import org.springframework.data.neo4j.aspects.core.RelationshipBacked;
-import org.springframework.data.neo4j.mapping.RelationshipResult;
-import org.springframework.data.neo4j.support.mapping.EntityStateHandler;
-import org.springframework.data.neo4j.support.node.NodeEntityStateFactory;
-import org.springframework.data.neo4j.support.DoReturn;
-import org.springframework.data.neo4j.core.EntityPath;
-import org.springframework.data.neo4j.core.EntityState;
-import org.springframework.data.neo4j.support.Neo4jTemplate;
-
-import org.springframework.data.neo4j.support.path.EntityPathPathIterableWrapper;
-import org.springframework.data.neo4j.support.query.CypherQueryExecutor;
-import org.springframework.data.neo4j.template.Neo4jOperations;
-
-import javax.persistence.Transient;
-import javax.persistence.Entity;
+import static org.springframework.data.neo4j.support.DoReturn.unwrap;
 
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import static org.springframework.data.neo4j.support.DoReturn.unwrap;
+import javax.persistence.Entity;
+import javax.persistence.Transient;
+
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.reflect.FieldSignature;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.traversal.TraversalDescription;
+import org.neo4j.graphdb.traversal.Traverser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.neo4j.annotation.GraphId;
+import org.springframework.data.neo4j.annotation.GraphProperty;
+import org.springframework.data.neo4j.annotation.GraphTraversal;
+import org.springframework.data.neo4j.annotation.NodeEntity;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.annotation.QueryType;
+import org.springframework.data.neo4j.annotation.RelatedTo;
+import org.springframework.data.neo4j.annotation.RelatedToVia;
+import org.springframework.data.neo4j.aspects.core.NodeBacked;
+import org.springframework.data.neo4j.aspects.core.RelationshipBacked;
+import org.springframework.data.neo4j.core.EntityPath;
+import org.springframework.data.neo4j.core.EntityState;
+import org.springframework.data.neo4j.mapping.RelationshipResult;
+import org.springframework.data.neo4j.support.DoReturn;
+import org.springframework.data.neo4j.support.Neo4jTemplate;
+import org.springframework.data.neo4j.support.mapping.EntityStateHandler;
+import org.springframework.data.neo4j.support.node.NodeEntityStateFactory;
+import org.springframework.data.neo4j.support.path.EntityPathPathIterableWrapper;
+import org.springframework.data.neo4j.support.query.CypherQueryExecutor;
 
 /**
  * Aspect for handling node entity creation and field access (read & write)
@@ -61,7 +62,7 @@ import static org.springframework.data.neo4j.support.DoReturn.unwrap;
  */
 public privileged aspect Neo4jNodeBacking { // extends AbstractTypeAnnotatingMixinFields<NodeEntity, NodeBacked> {
 
-    protected final Log log = LogFactory.getLog(getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     declare parents : (@NodeEntity *) implements NodeBacked;
 
